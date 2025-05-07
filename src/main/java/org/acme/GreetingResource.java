@@ -11,13 +11,15 @@ import java.security.Key;
 @Path("/")
 public class GreetingResource {
 
-    @GET
+
     @Produces(MediaType.TEXT_PLAIN)
     @RateLimit(value = 5, window = 10)
     @Fallback(
         fallbackMethod = "rateLimitFallback"
     )
 
+    @GET
+    @Path("/v1/hello")
     public Response hello() {
         return Response.ok("Hello from Quarkus REST").build();
     }
