@@ -1,9 +1,6 @@
-
 # 🏋️‍♂️ Projeto Academia - API com Quarkus
 
-API RESTful para gerenciamento de treinos, exercícios e grupos musculares, construída com Quarkus. Disponível em múltiplas versões (v1 e v2), com suporte a recursos avançados como autenticação, rate limiting e idempotência.
-
----
+Este projeto é uma API REST para gerenciamento de treinos, exercícios e grupos musculares, desenvolvida com Quarkus.
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -19,35 +16,35 @@ API RESTful para gerenciamento de treinos, exercícios e grupos musculares, cons
 
 ---
 
-## ⚙️ Como Executar o Projeto
+## 📦 Como executar o projeto
 
-1. Clone o repositório:
+### 1. Clone o repositório
 
 ```bash
 git clone https://github.com/G-u-i-l-h-e-r-m-e/API-TSI-Quarkus.git
+```
+
+### 2. Acesse a pasta do projeto
+
+```bash
 cd API-TSI-Quarkus
 ```
 
-2. Crie o arquivo `import.sql`:
+### 3. Crie dentro da pasta `resources` um arquivo chamado `import.sql`
 
-```bash
-touch src/main/resources/import.sql
-```
-
-3. Configure o `application.properties`:
+### 4. Configure o banco de dados em `src/main/resources/application.properties`
 
 ```properties
 quarkus.datasource.db-kind=h2
-quarkus.hibernate-orm.database.generation=create-drop
 quarkus.hibernate-orm.scripts.generation.create-target=import.sql
 quarkus.hibernate-orm.log.sql=true
-
 quarkus.swagger-ui.always-include=true
 quarkus.swagger-ui.theme=material
 quarkus.smallrye-openapi.info-title=API de Treinos
 quarkus.smallrye-openapi.info-version=2.0
-quarkus.smallrye-openapi.info-description=API RESTful com controle de treinos, exercícios e músculos. Inclui autenticação, rate limit e versionamento.
-
+quarkus.smallrye-openapi.info-contact-name=Equipe de Suporte
+quarkus.smallrye-openapi.info-contact-email=suporte@senac.com.br
+quarkus.smallrye-openapi.info-description=API desenvolvida para gerenciar treinos e exercicios fisicos. Permite cadastrar, listar, atualizar e excluir treinos, alem de associar exercicios a cada treino.
 quarkus.http.cors=true
 quarkus.http.cors.enabled=true
 quarkus.http.cors.origins=*
@@ -56,7 +53,7 @@ quarkus.http.cors.headers=Accept,Authorization,Content-Type,X-requested-with,x-a
 quarkus.http.cors.exposed-headers=Authorization,Content-Type,x-api-key
 ```
 
-4. Rode o projeto em modo dev:
+### 5. Execute em modo de Desenvolvimento
 
 ```bash
 ./mvnw quarkus:dev
@@ -64,91 +61,96 @@ quarkus.http.cors.exposed-headers=Authorization,Content-Type,x-api-key
 
 ---
 
-## 🔐 Segurança e Controle
+## 📝 Entidades e Endpoints - API v2
 
-- Autenticação via `X-API-Key` em todas as requisições.
-- Prevenção de duplicidade com `Idempotency-Key` nos métodos `POST`.
-- Rate Limiting: 3 requisições a cada 10 segundos.
-- Validações automáticas com Bean Validation.
+### 1.🏃‍♂️ Entidade Treino
 
----
+* **Representação:**
 
-## 📘 Documentação das Versões
+  * `id` *(auto-gerado)*
+  * `nome` *(obrigatório, mínimo 3 caracteres)*
+  * `data` *(obrigatório, formato ISO 8601)*
+  * `duracao` *(obrigatório, em minutos, valor positivo)*
+  * `objetivo` *(opcional)*
+  * `exercicios` *(opcional, JSON ou lista de strings)*
+  * `notas` *(opcional)*
+  * `usuario_id` *(obrigatório)*
 
-### ✅ V1 – Endpoints Base (sem autenticação)
+* **Endpoints:**
 
-- `GET /treinos`
-- `GET /treinos/{id}`
-- `POST /treinos`
-- `PUT /treinos/{id}`
-- `DELETE /treinos/{id}`
-- `GET /treinos/busca/treino/{nome}`
+  * `GET /api/v2/treinos`: Lista todos os treinos (limite de 3 req/10s).
+  * `GET /api/v2/treinos/{id}`: Busca treino por ID.
+  * `POST /api/v2/treinos`: Cria novo treino (requer cabeçalho `Idempotency-Key` e `X-API-Key`).
+  * `PUT /api/v2/treinos/{id}`: Atualiza treino existente.
+  * `DELETE /api/v2/treinos/{id}`: Remove treino por ID.
+  * `GET /api/v2/treinos/busca/treino/{nome}`: Busca treinos por nome.
 
-- `GET /exercicios`, `GET /exercicios/{id}`, etc.
-- `GET /musculos`, `GET /musculos/{id}`, etc.
-
-> 💡 Versão básica para testes locais. Sem segurança de produção. Não usa prefixo `/api`.
-
----
-
-### ✅ V2 – Endpoints com Recursos Avançados
-
-- Prefixo: `/api/v2/`
-
-#### Treinos
-
-- `GET /api/v2/treinos`
-- `GET /api/v2/treinos/{id}`
-- `POST /api/v2/treinos`
-- `PUT /api/v2/treinos/{id}`
-- `DELETE /api/v2/treinos/{id}`
-- `GET /api/v2/treinos/busca/treino/{nome}`
-
-Exemplo JSON:
 ```json
 {
-  "nome": "Treino de Força",
-  "duracao": 60,
+  "id": 1,
+  "nome": "Treino de Peito A",
+  "notas": "Boa performance",
+  "duracao": 60.0,
+  "data": "2025-04-01T07:30:00",
   "objetivo": "Hipertrofia",
-  "notas": "Alongar antes",
-  "data": "2025-06-05T08:00:00",
-  "exercicios": "[\"Supino\", \"Agachamento\"]"
+  "exercicios": ["Supino Reto", "Crucifixo", "Flexão de Braço"]
 }
 ```
 
-#### Exercícios
+### 2. 🏋️ Entidade Exercício
 
-- `GET /api/v2/exercicios`
-- `GET /api/v2/exercicios/{id}`
-- `POST /api/v2/exercicios`
-- `PUT /api/v2/exercicios/{id}`
-- `DELETE /api/v2/exercicios/{id}`
-- `GET /api/v2/exercicios/busca/exercicio/{nome}`
+* **Representação:**
 
-Exemplo JSON:
+  * `id` *(auto-gerado)*
+  * `nome` *(obrigatório, único)*
+  * `descricao` *(opcional)*
+  * `musculos_principais` *(obrigatório)*
+  * `musculos_secundarios` *(opcional)*
+  * `tipo` *(obrigatório, valores: "FORCA", "CARDIO", "ALONGAMENTO")*
+  * `instrucoes` *(opcional)*
+
+* **Endpoints:**
+
+  * `GET /api/v2/exercicios`: Lista todos os exercícios.
+  * `GET /api/v2/exercicios/{id}`: Busca por ID.
+  * `POST /api/v2/exercicios`: Cria novo exercício.
+  * `PUT /api/v2/exercicios/{id}`: Atualiza exercício.
+  * `DELETE /api/v2/exercicios/{id}`: Deleta exercício.
+  * `GET /api/v2/exercicios/busca/exercicios/{nome}`: Busca por nome.
+
 ```json
 {
+  "id": 1,
   "nome": "Supino Reto",
   "descricao": "Exercício de empurrar com barra",
   "musculos_principais": "Peitoral",
   "musculos_secundarios": "Tríceps, Ombros",
-  "tipo": "Força",
+  "tipo": "FORCA",
   "instrucoes": "Deite-se, segure a barra e empurre para cima"
 }
 ```
 
-#### Músculos
+### 3. 💪 Entidade Músculo
 
-- `GET /api/v2/musculos`
-- `GET /api/v2/musculos/{id}`
-- `POST /api/v2/musculos`
-- `PUT /api/v2/musculos/{id}`
-- `DELETE /api/v2/musculos/{id}`
-- `GET /api/v2/musculos/busca/musculo/{nome}`
+* **Representação:**
 
-Exemplo JSON:
+  * `id` *(auto-gerado)*
+  * `nome` *(obrigatório, único)*
+  * `grupo_muscular` *(obrigatório)*
+  * `descricao` *(opcional)*
+
+* **Endpoints:**
+
+  * `GET /api/v2/musculos`: Lista todos os músculos.
+  * `GET /api/v2/musculos/{id}`: Busca por ID.
+  * `POST /api/v2/musculos`: Cria novo músculo.
+  * `PUT /api/v2/musculos/{id}`: Atualiza músculo.
+  * `DELETE /api/v2/musculos/{id}`: Remove músculo.
+  * `GET /api/v2/musculos/busca/musculo/{nome}`: Busca por nome.
+
 ```json
 {
+  "id": 1,
   "nome": "Peitoral",
   "descricao": "Músculo responsável pela adução dos braços",
   "grupo_muscular": "Peito"
@@ -157,13 +159,11 @@ Exemplo JSON:
 
 ---
 
-## 📄 Acessando a Documentação Swagger
+## 📘️ Documentação via Swagger UI
 
-Acesse: [http://localhost:8080/q/swagger-ui](http://localhost:8080/q/swagger-ui)
+Acesse a documentação gerada automaticamente:
 
-- Interface interativa com **exemplos de payloads**
-- Resumos de **códigos de resposta**
-- Organizada por **versão da API**
+[http://localhost:8080/q/swagger-ui/](http://localhost:8080/q/swagger-ui/)
 
 ---
 
@@ -177,3 +177,11 @@ Acesse: [http://localhost:8080/q/swagger-ui](http://localhost:8080/q/swagger-ui)
 | ✅ Rate Limiting     | 3 chamadas a cada 10s com fallback 429 |
 | ✅ Bean Validation   | Campos obrigatórios validados automaticamente |
 | ✅ Tratamento de Erros | Mensagens claras com códigos HTTP adequados |
+| ✅ Swagger customizado com metadados|
+
+---
+
+📢 Dúvidas ou sugestões? Entre em contato com a equipe: `guilherme.asouza29@senacsp.edu.br`
+
+🚀 Projeto desenvolvido para fins acadêmicos. Todos os direitos reservados.
+
