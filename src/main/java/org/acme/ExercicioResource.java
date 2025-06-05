@@ -1,9 +1,11 @@
 package org.acme;
 
+import io.smallrye.faulttolerance.api.RateLimit;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.faulttolerance.Fallback;
 
 import java.net.URI;
 import java.util.List;
@@ -15,8 +17,17 @@ import java.util.List;
 public class ExercicioResource {
 
     @GET
-    public List<Exercicio> listarTodos() {
-        return Exercicio.listAll();
+    @RateLimit(value = 3, window = 10) // 3 requisições a cada 10 segundos
+    @Fallback(fallbackMethod = "rateLimitFallback")
+    public Response listarTodos() {
+        return Response.ok(Exercicio.listAll()).build();
+    }
+
+    // fallback chamado automaticamente quando estourar o limite
+    public Response rateLimitFallback() {
+        return Response.status(429)
+                .entity("⚠️ Limite de requisições atingido. Tente novamente mais tarde.")
+                .build();
     }
 
     @GET
@@ -24,16 +35,41 @@ public class ExercicioResource {
     public Response buscarPorId(@PathParam("id") Long id) {
         Exercicio exercicio = Exercicio.findById(id);
         if (exercicio == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Exercício com ID " + id + " não encontrado.")
+                    .build();
         }
         return Response.ok(exercicio).build();
     }
 
+
     @POST
     @Transactional
-    public Response criar(Exercicio exercicio) {
-        exercicio.persist();
-        return Response.created(URI.create("/exercicios/" + exercicio.id)).entity(exercicio).build();
+    public Response criar(
+            Exercicio exercicio,
+            @HeaderParam("Idempotency-Key") String idempotencyKey,
+            @HeaderParam("X-API-Key") String chave) {
+
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            return Response.status(400).entity("Cabeçalho 'Idempotency-Key' é obrigatório.").build();
+        }
+
+        boolean chaveUsada = IdempotencyKey.find("chave = ?1", idempotencyKey)
+                .firstResultOptional().isPresent();
+        if (chaveUsada) {
+            return Response.status(409).entity("Requisição duplicada. Essa chave já foi usada.").build();
+        }
+
+        exercicio.persist(); // qualquer erro de validação será tratado no mapper global
+
+        IdempotencyKey registro = new IdempotencyKey();
+        registro.chave = idempotencyKey;
+        registro.metodo = "POST";
+        registro.endpoint = "/exercicios";
+        registro.persist();
+
+        URI location = URI.create("/exercicios/" + exercicio.id);
+        return Response.created(location).entity(exercicio).build();
     }
 
     @PUT
@@ -63,8 +99,11 @@ public class ExercicioResource {
         if (excluido) {
             return Response.noContent().build();
         }
-        return Response.status(Response.Status.NOT_FOUND).build();
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity("Exercício com ID " + id + " não encontrado para exclusão.")
+                .build();
     }
+
 
     @GET
     @Path("/busca/exercicio/{nome}")

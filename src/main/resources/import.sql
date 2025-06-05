@@ -13,3 +13,5 @@ INSERT INTO musculo (id, nome, descricao, grupo_muscular) VALUES
                                                               (1, 'Peitoral', 'Músculo responsável pela adução dos braços', 'Peito'),
                                                               (2, 'Quadríceps', 'Músculo frontal da coxa, essencial para agachar', 'Pernas'),
                                                               (3, 'Tríceps', 'Responsável pela extensão do braço', 'Braços');
+INSERT INTO api_key (id, valor, active, role, criadaEm) VALUES
+    (1, 'MINHA_CHAVE_SECRETA', true, 'ADMIN', CURRENT_TIMESTAMP);

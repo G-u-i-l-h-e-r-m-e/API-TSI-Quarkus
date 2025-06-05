@@ -1,5 +1,6 @@
 package org.acme;
 
+
 import io.smallrye.faulttolerance.api.RateLimit;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -10,10 +11,10 @@ import org.eclipse.microprofile.faulttolerance.Fallback;
 import java.net.URI;
 import java.util.List;
 
-@Path("treinos")
+@Path("api/v2/treinos")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class TreinoResource {
+public class TreinoResourceV2 {
 
     @GET
     @RateLimit(value = 3, window = 10)
@@ -66,7 +67,7 @@ public class TreinoResource {
         IdempotencyKey registro = new IdempotencyKey();
         registro.chave = idempotencyKey;
         registro.metodo = "POST";
-        registro.endpoint = "/treinos";
+        registro.endpoint = "api/v2/treinos";
         registro.persist();
 
         URI location = URI.create("/treinos/" + treino.id);
@@ -113,3 +114,4 @@ public class TreinoResource {
         return Treino.list("LOWER(nome) LIKE LOWER(?1)", "%" + nome + "%");
     }
 }
+

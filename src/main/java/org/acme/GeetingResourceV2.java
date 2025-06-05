@@ -6,18 +6,21 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 
+
+@Path("/api/v2")
 public class GeetingResourceV2 {
 
-    @Produces(MediaType.TEXT_PLAIN)
-    @RateLimit(value = 5, window = 10)
-    @Fallback(
-            fallbackMethod = "rateLimitFallback"
-    )
-
     @GET
-    @Path("/v2/hello")
-    public Response hello() {
-        return Response.ok("Hello from Quarkus REST").build();
+    @Path("/hello")
+    @RateLimit(value = 3, window = 10)
+    @Fallback(fallbackMethod = "rateLimitFallback")
+    public String hello() {
+        return "Olá da API versão 2!";
+    }
+
+    // Método fallback com MESMA assinatura (exceto que não usa anotações)
+    public String rateLimitFallback() {
+        return "⚠️ Limite de requisições atingido. Tente novamente mais tarde.";
     }
 
     @POST
